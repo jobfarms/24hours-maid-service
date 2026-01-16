@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { motion } from 'framer-motion';
-import { easeInOut } from 'framer-motion';
 import { Calendar, Clock, MapPin, Search, Zap } from 'lucide-react';
 
 export default function CustomerHome() {
@@ -52,7 +51,7 @@ export default function CustomerHome() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: 'easeOut' },
+      transition: { duration: 0.5 },
     },
   };
 
@@ -63,12 +62,12 @@ export default function CustomerHome() {
         <motion.div
           className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"
           animate={{ y: [0, 30, 0], x: [0, 20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: easeInOut }}
+          transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
           className="absolute bottom-20 right-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl"
           animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: easeInOut }}
+          transition={{ duration: 10, repeat: Infinity }}
         />
       </div>
 
