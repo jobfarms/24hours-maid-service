@@ -1,0 +1,63 @@
+name: ATOZ Android Production Build & Autoheal
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-autoheal-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: ⬇️ Checkout latest codebase
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Setup Node.js & core dependencies
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: 🚦 Install full dependencies
+      run: |
+        npm install
+        if [ -f "core/System_Warden.ts" ]; then npx ts-node core/System_Warden.ts; fi
+
+    - name: 🔐 Run ATOZ File/Rule Integrity Checks
+      run: |
+        if [ ! -f "config/Universal_Pricing.ts" ]; then echo "ERROR: Pricing config missing"; exit 1; fi
+        if [ ! -d "public/segment" ] || [ $(ls public/segment | wc -l) -lt 1000 ]; then echo "ERROR: SEO/Segment pages missing"; exit 1; fi
+        # Add any further checks here: admin lock, .env presence, etc.
+
+    - name: 🏗️ Build Android APK (Expo EAS or React Native CLI)
+      # For React Native/Expo managed workflow. Update as per your stack.
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        eas-login: ${{ secrets.EXPO_EAS_LOGIN }}    # Store Expo login JSON in GitHub secrets
+      env:
+        EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      run: |
+        eas build --platform android --profile production --non-interactive
+
+    - name: 📲 Locate & Upload APK Artifact
+      run: |
+        APK_PATH=$(find . -name "*.apk" | head -1)
+        if [ ! -f "$APK_PATH" ]; then echo "ERROR: APK not produced"; exit 1; fi
+        echo "APK at $APK_PATH"
+        mkdir -p android-artifact
+        cp "$APK_PATH" android-artifact/app-release.apk
+
+    - name: ⬆️ Upload APK to GitHub Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-release-apk
+        path: android-artifact/app-release.apk
+
+    - name: 🚀 Optionally deploy or publish (e.g., push ZIP to release, CDN, Google Drive, etc)
+      # Add any integration step here if you want public download or connect to Play Store.
+      run: echo "Release & deploy ready."
+
+# End of workflow
